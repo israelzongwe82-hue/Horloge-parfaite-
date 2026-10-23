@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horloge parfaite - KIBWE ZONGWE Israël</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --text-color: #ffffff;
+            --container-bg: rgba(255, 255, 255, 0.05);
+            --container-border: rgba(255, 255, 255, 0.1);
+            --clock-face-bg: radial-gradient(circle at 30% 30%, #1e1e2f, #0a0a12);
+            --digital-bg: rgba(0, 0, 0, 0.35);
+            --date-color: #b8c7ff;
+            --hour-color-start: #ffd966;
+            --hour-color-end: #fff2b0;
+            --minute-color-start: #aad6ff;
+            --minute-color-end: #e6f2ff;
+            --second-color: #ff5e7e;
+            --hour-glow: #ffb347;
+            --minute-glow: #7aaaff;
+            --second-glow: #ff2b4e;
+            --time-gradient: linear-gradient(135deg, #fff9e6, #ffe07a, #ffc107);
+            --marker-color: rgba(255, 255, 255, 0.6);
+            --major-marker-color: #ffd966;
+            --settings-bg: rgba(20, 20, 35, 0.98);
+        }
+
+        body.light-mode {
+            --bg-gradient: linear-gradient(135deg, #e0eafc, #cfdef3, #f5f7fa);
+            --text-color: #1a1a2e;
+            --container-bg: rgba(255, 255, 255, 0.6);
+            --container-border: rgba(0, 0, 0, 0.1);
+            --clock-face-bg: radial-gradient(circle at 30% 30%, #ffffff, #e8ecf3);
+            --digital-bg: rgba(255, 255, 255, 0.5);
+            --date-color: #4a5a8a;
+            --hour-color-start: #d4a017;
+            --hour-color-end: #f0c040;
+            --minute-color-start: #4a7abf;
+            --minute-color-end: #6a9ae0;
+            --second-color: #e74c3c;
+            --hour-glow: #e8b830;
+            --minute-glow: #5a8ae0;
+            --second-glow: #e74c3c;
+            --time-gradient: linear-gradient(135deg, #8e6f1e, #c49a1a, #b8860b);
+            --marker-color: rgba(0, 0, 0, 0.5);
+            --major-marker-color: #b8860b;
+            --settings-bg: rgba(245, 247, 250, 0.98);
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-gradient);
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+            color: var(--text-color);
+            padding: 100px 20px 20px 20px;
+            transition: background 0.5s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ÉCRAN DE BIENVENUE */
+        .welcome-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            padding: 20px;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .welcome-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .welcome-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 200, 0, 0.08), transparent 70%);
+            pointer-events: none;
+        }
+
+        .welcome-card {
+            position: relative;
+            background: rgba(20, 20, 35, 0.85);
+            backdrop-filter: blur(25px);
+            padding: 55px 45px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 0 60px rgba(255, 200, 0, 0.05);
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            animation: welcomeAppear 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+        }
+
+        @keyframes welcomeAppear {
+            from { opacity: 0; transform: scale(0.85) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 200, 0, 0.5)); }
+            50% { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(255, 200, 0, 0.9)); }
+        }
+
+        .welcome-card h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff9e6, #ffe07a, #ffc107);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .welcome-card p {
+            font-size: 0.95rem;
+            color: #b8c7ff;
+            margin-bottom: 30px;
+            letter-spacing: 0.5px;
+        }
+
+        .welcome-card input {
+            width: 100%;
+            padding: 16px 22px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 1.05rem;
+            font-family: inherit;
+            text-align: center;
+            letter-spacing: 1px;
+            outline: none;
+            transition: all 0.3s ease;
+            margin-bottom: 22px;
+        }
+
+        .welcome-card input::placeholder { color: rgba(255, 255, 255, 0.4); }
+
+        .welcome-card input:focus {
+            border-color: #ffd966;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 4px rgba(255, 200, 0, 0.15), 0 0 30px rgba(255, 200, 0, 0.25);
+        }
+
+        .welcome-card button {
+            width: 100%;
+            padding: 16px;
+            border-radius: 15px;
+            border: none;
+            background: linear-gradient(135deg, #ffd966, #ffb347);
+            color: #1a1a2e;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(255, 180, 60, 0.4);
+            text-transform: uppercase;
+        }
+
+        .welcome-card button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(255, 180, 60, 0.6);
+        }
+
+        .welcome-card button:active { transform: translateY(0); }
+
+        /* BANNIÈRE UTILISATEUR */
+        .user-banner {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 24px 10px 14px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 200, 0, 0.08);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+        }
+
+        .user-banner.visible { opacity: 1; visibility: visible; }
+
+        .user-banner .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd966, #ffb347);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #1a1a2e;
+            font-size: 1.1rem;
+            box-shadow: 0 0 15px rgba(255, 200, 0, 0.6);
+            flex-shrink: 0;
+        }
+
+        .user-banner .greeting {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.15;
+            color: var(--text-color);
+        }
+
+        .user-banner .greeting .hello {
+            font-size: 0.68rem;
+            opacity: 0.7;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .user-banner .greeting .name {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fff9e6, #ffd966);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* BOUTONS FLOTTANTS */
+        .floating-btn {
+            position: fixed;
+            top: 25px;
+            z-index: 100;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: var(--text-color);
+            border: 1px solid var(--container-border);
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+        }
+
+        .floating-btn.calendar-btn { left: 25px; }
+        .floating-btn.settings-btn { right: 25px; }
+
+        /* PANNEAUX */
+        .panel {
+            position: fixed;
+            top: 90px;
+            z-index: 99;
+            background: var(--settings-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--container-border);
+            color: var(--text-color);
+            transition: all 0.4s ease;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-20px);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .panel.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .panel.calendar-panel { left: 25px; width: 340px; }
+        .panel.settings-panel { right: 25px; width: 340px; }
+
+        .panel h3 {
+            font-size: 1.3rem;
+            margin-bottom: 18px;
+            text-align: center;
+            color: var(--text-color);
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--container-border);
+            padding-bottom: 12px;
+        }
+
+        /* Calendrier */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-header button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--container-border);
+            color: var(--text-color);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .calendar-header button:hover { background: rgba(255, 255, 255, 0.25); }
+
+        .calendar-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: 1px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+
+        .calendar-grid .day-name {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--major-marker-color);
+            padding: 6px 0;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-grid .day {
+            padding: 8px 0;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: default;
+            transition: background 0.2s;
+        }
+
+        .calendar-grid .day:hover { background: rgba(255, 255, 255, 0.1); }
+        .calendar-grid .day.other-month { opacity: 0.3; }
+
+        .calendar-grid .day.today {
+            background: linear-gradient(135deg, #ffd966, #ffb347);
+            color: #1a1a2e;
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(255, 200, 0, 0.6);
+        }
+
+        /* Paramètres */
+        .setting-group {
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--container-border);
+        }
+
+        .setting-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: 0.88rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .setting-group .value-display {
+            float: right;
+            font-size: 0.82rem;
+            color: #ffd966;
+            font-weight: 600;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider-toggle {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .slider-toggle:before {
+            position: absolute;
+            content: "";
+            height: 20px; width: 20px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .switch input:checked + .slider-toggle { background-color: #ffb347; }
+        .switch input:checked + .slider-toggle:before { transform: translateX(24px); }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: #ffd966;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(255, 200, 0, 0.7);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: #ffd966;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px rgba(255, 200, 0, 0.7);
+        }
+
+        .color-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .color-row span { font-size: 0.85rem; }
+
+        input[type="color"] {
+            width: 42px; height: 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+        }
+
+        /* Sélecteur de son */
+        .sound-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .sound-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 0.88rem;
+        }
+
+        .sound-option:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .sound-option.active {
+            border-color: #ffd966;
+            background: rgba(255, 200, 0, 0.12);
+            box-shadow: 0 0 15px rgba(255, 200, 0, 0.2);
+        }
+
+        .sound-option .sound-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sound-option .sound-icon { font-size: 1.1rem; }
+
+        .sound-option .test-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid var(--container-border);
+            color: var(--text-color);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .sound-option .test-btn:hover {
+            background: #ffd966;
+            color: #1a1a2e;
+        }
+
+        /* CONTENEUR PRINCIPAL */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            background: var(--container-bg);
+            backdrop-filter: blur(10px);
+            padding: 40px 50px;
+            border-radius: 60px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px var(--container-border);
+            border: 1px solid var(--container-border);
+            transition: all 0.5s ease;
+            transform-origin: center center;
+        }
+
+            /* HORLOGE ANALOGIQUE */
+        .analog-clock {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: var(--clock-face-bg);
+            box-shadow: 
+                0 0 0 8px rgba(255, 255, 255, 0.05),
+                0 0 0 12px rgba(0, 0, 0, 0.3),
+                0 20px 40px rgba(0, 0, 0, 0.7),
+                inset 0 0 30px rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.5s ease, width 0.3s ease, height 0.3s ease;
+            cursor: pointer;
+        }
+
+        .analog-clock:hover {
+            box-shadow: 
+                0 0 0 8px rgba(255, 200, 0, 0.15),
+                0 0 0 12px rgba(0, 0, 0, 0.3),
+                0 20px 50px rgba(255, 180, 60, 0.4),
+                inset 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .analog-clock::before {
+            content: '';
+            position: absolute;
+            width: 12px; height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffd966, 0 0 20px #ffb347;
+            z-index: 10;
+        }
+
+        .clock-face {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .marker {
+            position: absolute;
+            width: 4px; height: 12px;
+            background: var(--marker-color);
+            left: 50%;
+            top: 10px;
+            transform-origin: 50% 110px;
+            border-radius: 4px;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+            transition: background 0.3s ease;
+        }
+
+        .marker.major {
+            width: 6px; height: 16px;
+            background: var(--major-marker-color);
+            box-shadow: 0 0 12px #ffb347;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 10px;
+            transition: transform 0.05s cubic-bezier(0.4, 2.5, 0.3, 1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+        }
+
+        .hour-hand {
+            width: 8px; height: 70px;
+            margin-left: -4px;
+            background: linear-gradient(to top, var(--hour-color-start), var(--hour-color-end));
+            border-radius: 8px 8px 4px 4px;
+            z-index: 3;
+            box-shadow: 0 0 18px var(--hour-glow);
+        }
+
+        .minute-hand {
+            width: 6px; height: 100px;
+            margin-left: -3px;
+            background: linear-gradient(to top, var(--minute-color-start), var(--minute-color-end));
+            border-radius: 6px 6px 3px 3px;
+            z-index: 4;
+            box-shadow: 0 0 15px var(--minute-glow);
+        }
+
+        .second-hand {
+            width: 2px; height: 110px;
+            margin-left: -1px;
+            background: var(--second-color);
+            border-radius: 2px;
+            z-index: 5;
+            box-shadow: 0 0 20px var(--second-glow), 0 0 35px var(--second-color);
+        }
+
+        .second-hand::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px; height: 10px;
+            background: var(--second-color);
+            border-radius: 50%;
+            box-shadow: 0 0 20px var(--second-glow);
+        }
+
+        /* HORLOGE NUMÉRIQUE */
+        .digital-clock {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--digital-bg);
+            backdrop-filter: blur(4px);
+            padding: 30px 40px;
+            border-radius: 40px;
+            border: 1px solid var(--container-border);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6), 0 15px 30px rgba(0, 0, 0, 0.5);
+            transition: background 0.5s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .digital-clock:hover {
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6), 0 15px 40px rgba(255, 180, 60, 0.4);
+        }
+
+        .time {
+            font-size: 4.2rem;
+            font-weight: 700;
+            letter-spacing: 6px;
+            font-variant-numeric: tabular-nums;
+            background: var(--time-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+            transition: all 0.3s ease;
+        }
+
+        .seconds {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--second-color);
+            text-shadow: 0 0 20px var(--second-glow);
+            margin-left: 15px;
+            vertical-align: middle;
+            letter-spacing: 2px;
+        }
+
+        .date {
+            margin-top: 15px;
+            font-size: 1.25rem;
+            letter-spacing: 3px;
+            color: var(--date-color);
+            text-transform: uppercase;
+            font-weight: 300;
+            text-shadow: 0 0 15px rgba(100, 150, 255, 0.5);
+            border-top: 1px solid var(--container-border);
+            padding-top: 18px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* MODE PLEIN ÉCRAN */
+        .focus-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            cursor: zoom-out;
+        }
+
+        .focus-overlay.active { opacity: 1; visibility: visible; }
+
+        .focus-overlay .focus-content {
+            transform: scale(0.5);
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3), opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .focus-overlay.active .focus-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .focus-overlay .analog-clock {
+            width: 480px;
+            height: 480px;
+            box-shadow: 
+                0 0 0 12px rgba(255, 255, 255, 0.08),
+                0 0 0 20px rgba(0, 0, 0, 0.4),
+                0 30px 80px rgba(0, 0, 0, 0.8),
+                0 0 100px rgba(255, 180, 60, 0.3),
+                inset 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .focus-overlay .analog-clock::before {
+            width: 18px; height: 18px;
+            box-shadow: 0 0 20px #ffd966, 0 0 40px #ffb347;
+        }
+
+        .focus-overlay .marker {
+            width: 7px; height: 22px;
+            transform-origin: 50% 220px;
+            top: 20px;
+        }
+
+        .focus-overlay .marker.major {
+            width: 10px; height: 30px;
+            box-shadow: 0 0 20px #ffb347;
+        }
+
+        .focus-overlay .hour-hand { width: 14px; height: 140px; margin-left: -7px; border-radius: 14px 14px 7px 7px; }
+        .focus-overlay .minute-hand { width: 10px; height: 200px; margin-left: -5px; border-radius: 10px 10px 5px 5px; }
+        .focus-overlay .second-hand { width: 3px; height: 220px; margin-left: -1.5px; }
+        .focus-overlay .second-hand::after { width: 18px; height: 18px; bottom: -10px; }
+
+        .focus-overlay .digital-clock { padding: 60px 90px; border-radius: 60px; }
+        .focus-overlay .time { font-size: 8rem; letter-spacing: 10px; }
+        .focus-overlay .seconds { font-size: 3.5rem; }
+        .focus-overlay .date { font-size: 2rem; letter-spacing: 6px; padding-top: 30px; margin-top: 25px; }
+
+        .close-focus-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            z-index: 5001;
+            padding: 10px 25px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease 0.3s;
+        }
+
+        .focus-overlay.active ~ .close-focus-hint { opacity: 1; }
+
+        /* NOM DU CRÉATEUR */
+        .creator-name {
+            margin-top: 30px;
+            font-size: 1rem;
+            letter-spacing: 3px;
+            color: var(--date-color);
+            font-weight: 300;
+            text-transform: uppercase;
+            text-align: center;
+            opacity: 0.8;
+            padding: 12px 30px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--container-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .creator-name strong {
+            color: #ffd966;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 750px) {
+            body { padding: 90px 15px 20px 15px; }
+            .container { flex-direction: column; gap: 40px; padding: 35px 30px; border-radius: 40px; }
+            .time { font-size: 3.2rem; letter-spacing: 4px; }
+            .seconds { font-size: 1.6rem; }
+            .analog-clock { width: 200px; height: 200px; }
+            .marker { transform-origin: 50% 90px; }
+            .hour-hand { height: 58px; }
+            .minute-hand { height: 82px; }
+            .second-hand { height: 92px; }
+            .panel { width: calc(100vw - 50px) !important; max-width: 340px; }
+            .floating-btn { width: 48px; height: 48px; font-size: 20px; top: 15px; }
+            .floating-btn.calendar-btn { left: 15px; }
+            .floating-btn.settings-btn { right: 15px; }
+            .panel.calendar-panel { left: 15px; }
+            .panel.settings-panel { right: 15px; }
+            .panel { top: 75px; }
+            .user-banner { top: 75px; padding: 8px 18px 8px 10px; }
+            .user-banner .avatar { width: 32px; height: 32px; font-size: 0.95rem; }
+            .user-banner .greeting .name { font-size: 0.9rem; max-width: 130px; }
+            .welcome-card { padding: 40px 28px; }
+            .welcome-card h1 { font-size: 1.5rem; }
+            .focus-overlay .analog-clock { width: 300px; height: 300px; }
+            .focus-overlay .marker { transform-origin: 50% 140px; }
+            .focus-overlay .hour-hand { height: 90px; }
+            .focus-overlay .minute-hand { height: 125px; }
+            .focus-overlay .second-hand { height: 140px; }
+            .focus-overlay .time { font-size: 4.5rem; letter-spacing: 5px; }
+            .focus-overlay .seconds { font-size: 2rem; }
+            .focus-overlay .date { font-size: 1.2rem; letter-spacing: 3px; }
+            .focus-overlay .digital-clock { padding: 40px 40px; }
+        }
+
+        .panel::-webkit-scrollbar { width: 6px; }
+        .panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ÉCRAN DE BIENVENUE -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-card">
+            <div class="welcome-icon">⏰</div>
+            <h1>Bienvenue</h1>
+            <p>Quel est votre nom ?</p>
+            <input type="text" id="userNameInput" placeholder="Entrez votre nom..." maxlength="30" autocomplete="off">
+            <button id="startBtn">Commencer</button>
+        </div>
+    </div>
+
+    <!-- BANNIÈRE UTILISATEUR -->
+    <div class="user-banner" id="userBanner">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="greeting">
+            <span class="hello">Bonjour</span>
+            <span class="name" id="userNameDisplay">Utilisateur</span>
+        </div>
+    </div>
+
+    <!-- Boutons flottants -->
+    <button class="floating-btn calendar-btn" id="calendarBtn" title="Calendrier">📅</button>
+    <button class="floating-btn settings-btn" id="settingsBtn" title="Paramètres">⚙️</button>
+
+    <!-- Panneau calendrier -->
+    <div class="panel calendar-panel" id="calendarPanel">
+        <h3>📅 Calendrier</h3>
+        <div class="calendar-header">
+            <button id="prevMonth">◀</button>
+            <span class="calendar-title" id="calendarTitle">---</span>
+            <button id="nextMonth">▶</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <!-- Panneau paramètres -->
+    <div class="panel settings-panel" id="settingsPanel">
+        <h3>⚙️ Paramètres</h3>
+
+        <div class="setting-group">
+            <div class="toggle-row">
+                <label>🌓 Mode clair / sombre</label>
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <div class="toggle-row">
+                <label>🔊 Son tic-tac</label>
+                <label class="switch">
+                    <input type="checkbox" id="soundToggle" checked>
+                    <span class="slider-toggle"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- NOUVEAU : Choix du son de tic-tac -->
+        <div class="setting-group">
+            <label>🎵 Choisir le son tic-tac</label>
+            <div class="sound-selector" id="tickSoundSelector">
+                <div class="sound-option active" data-sound="classic">
+                    <div class="sound-info">
+                        <span class="sound-icon">🔔</span>
+                        <span>Classique</span>
+                    </div>
+                    <button class="test-btn" data-test="classic" title="Tester">▶</button>
+                </div>
+                <div class="sound-option" data-sound="woodblock">
+                    <div class="sound-info">
+                        <span class="sound-icon">🪵</span>
+                        <span>Bois (Woodblock)</span>
+                    </div>
+                    <button class="test-btn" data-test="woodblock" title="Tester">▶</button>
+                </div>
+                <div class="sound-option" data-sound="digital">
+                    <div class="sound-info">
+                        <span class="sound-icon">💻</span>
+                        <span>Digital</span>
+                    </div>
+                    <button class="test-btn" data-test="digital" title="Tester">▶</button>
+                </div>
+                <div class="sound-option" data-sound="bell">
+                    <div class="sound-info">
+                        <span class="sound-icon">🔕</span>
+                        <span>Cloche douce</span>
+                    </div>
+                    <button class="test-btn" data-test="bell" title="Tester">▶</button>
+                </div>
+                <div class="sound-option" data-sound="tick">
+                    <div class="sound-info">
+                        <span class="sound-icon">⏱️</span>
+                        <span>Tic pur</span>
+                    </div>
+                    <button class="test-btn" data-test="tick" title="Tester">▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOUVEAU : Choix du son d'heure -->
+        <div class="setting-group">
+            <label>🕐 Son à chaque heure (différent)</label>
+            <div class="sound-selector" id="hourSoundSelector">
+                <div class="sound-option active" data-sound="chime">
+                    <div class="sound-info">
+                        <span class="sound-icon">🎼</span>
+                        <span>Carillon</span>
+                    </div>
+                    <button class="test-btn" data-test="chime" title="Tester">▶</button>
+                </div>
+                <div class="sound-option" data-sound="bell-hour">
+                    <div class="sound-info">
+                        <span class="sound-icon">🔔</span>
+                        <span>Cloche</span>
+                    </div>
+                    <button class="test-btn" data-test="bell-hour" title="Tester">▶</button>
+                </div>
+                <div class="sound-option" data-sound="gong">
+                    <div class="sound-info">
+                        <span class="sound-icon">🥁</span>
+                        <span>Gong</span>
+                    </div>
+                    <button class="test-btn" data-test="gong" title="Tester">▶</button>
+                </div>
+                <div class="sound-option" data-sound="marimba">
+                    <div class="sound-info">
+                        <span class="sound-icon">🎹</span>
+                        <span>Marimba</span>
+                    </div>
+                    <button class="test-btn" data-test="marimba" title="Tester">▶</button>
+                </div>
+                <div class="sound-option" data-sound="beep">
+                    <div class="sound-info">
+                        <span class="sound-icon">📢</span>
+                        <span>Bip électronique</span>
+                    </div>
+                    <button class="test-btn" data-test="beep" title="Tester">▶</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <label>↔️ Taille horizontale <span class="value-display" id="scaleXValue">100%</span></label>
+            <input type="range" id="scaleX" min="50" max="150" value="100" step="5">
+        </div>
+
+        <div class="setting-group">
+            <label>↕️ Taille verticale <span class="value-display" id="scaleYValue">100%</span></label>
+            <input type="range" id="scaleY" min="50" max="150" value="100" step="5">
+        </div>
+
+        <div class="setting-group">
+            <label>🎨 Personnalisation des couleurs</label>
+            <div class="color-row">
+                <span>Heures (aiguille)</span>
+                <input type="color" id="colorHour" value="#ffd966">
+            </div>
+            <div class="color-row">
+                <span>Minutes (aiguille)</span>
+                <input type="color" id="colorMinute" value="#aad6ff">
+            </div>
+            <div class="color-row">
+                <span>Secondes (aiguille)</span>
+                <input type="color" id="colorSecond" value="#ff5e7e">
+            </div>
+            <div class="color-row">
+                <span>Heure numérique</span>
+                <input type="color" id="colorDigital" value="#ffe07a">
+            </div>
+            <div class="color-row">
+                <span>Date</span>
+                <input type="color" id="colorDate" value="#b8c7ff">
+            </div>
+            <div class="color-row">
+                <span>Calendrier (titre)</span>
+                <input type="color" id="colorCalendar" value="#ffd966">
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <button id="resetSettings" style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--container-border); background:rgba(255,255,255,0.1); color:var(--text-color); cursor:pointer; font-size:0.9rem; letter-spacing:1px;">🔄 Réinitialiser</button>
+        </div>
+    </div>
+
+    <!-- CONTENEUR PRINCIPAL -->
+    <div class="container" id="mainContainer">
+        <div class="analog-clock" id="analogClock">
+            <div class="clock-face" id="clockFace">
+                <div class="hand hour-hand" id="hourHand"></div>
+                <div class="hand minute-hand" id="minuteHand"></div>
+                <div class="hand second-hand" id="secondHand"></div>
+            </div>
+        </div>
+
+        <div class="digital-clock" id="digitalClock">
+            <div class="time" id="digitalTime">00:00<span class="seconds" id="digitalSeconds">00</span></div>
+            <div class="date" id="digitalDate">---</div>
+        </div>
+    </div>
+
+    <div class="creator-name">Créé par <strong>KIBWE ZONGWE Israël</strong></div>
+
+    <!-- OVERLAY PLEIN ÉCRAN -->
+    <div class="focus-overlay" id="focusOverlay">
+        <div class="focus-content" id="focusContent"></div>
+    </div>
+    <div class="close-focus-hint">Cliquez n'importe où pour fermer</div>
+
+    <script>
+        (function() {
+            // ==================== GÉNÉRATION DES MARQUEURS ====================
+            function generateMarkers(face) {
+                face.innerHTML = '';
+                for (let i = 0; i < 12; i++) {
+                    const marker = document.createElement('div');
+                    marker.className = 'marker' + (i % 3 === 0 ? ' major' : '');
+                    marker.style.transform = `rotate(${i * 30}deg)`;
+                    face.appendChild(marker);
+                }
+                const hourHand = document.createElement('div');
+                hourHand.className = 'hand hour-hand';
+                face.appendChild(hourHand);
+
+                const minuteHand = document.createElement('div');
+                minuteHand.className = 'hand minute-hand';
+                face.appendChild(minuteHand);
+
+                const secondHand = document.createElement('div');
+                secondHand.className = 'hand second-hand';
+                face.appendChild(secondHand);
+            }
+
+            const clockFace = document.getElementById('clockFace');
+            generateMarkers(clockFace);
+
+            // ==================== RÉFÉRENCES DOM ====================
+            const digitalTime = document.getElementById('digitalTime');
+            const digitalDate = document.getElementById('digitalDate');
+            const mainContainer = document.getElementById('mainContainer');
+            const calendarBtn = document.getElementById('calendarBtn');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const calendarPanel = document.getElementById('calendarPanel');
+            const settingsPanel = document.getElementById('settingsPanel');
+            const analogClock = document.getElementById('analogClock');
+            const digitalClock = document.getElementById('digitalClock');
+            const focusOverlay = document.getElementById('focusOverlay');
+            const focusContent = document.getElementById('focusContent');
+            const welcomeOverlay = document.getElementById('welcomeOverlay');
+            const userNameInput = document.getElementById('userNameInput');
+            const startBtn = document.getElementById('startBtn');
+            const userBanner = document.getElementById('userBanner');
+            const userAvatar = document.getElementById('userAvatar');
+            const userNameDisplay = document.getElementById('userNameDisplay');
+
+           // ==================== NOMS FRANÇAIS ====================
+            const jours = ['DIMANCHE', 'LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI'];
+            const mois = ['JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN', 'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'];
+            const joursCourt = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
+
+            // ==================== ÉCRAN DE BIENVENUE ====================
+            function saveUserName(name) {
+                try { localStorage.setItem('clock_user_name', name); } catch (e) {}
+            }
+
+            function loadUserName() {
+                try { return localStorage.getItem('clock_user_name'); }
+                catch (e) { return null; }
+            }
+
+            function showUserBanner(name) {
+                userNameDisplay.textContent = name;
+                userAvatar.textContent = name.trim().charAt(0).toUpperCase() || '?';
+                userBanner.classList.add('visible');
+            }
+
+            function hideWelcome() {
+                welcomeOverlay.classList.add('hidden');
+            }
+
+            function handleStart() {
+                const name = userNameInput.value.trim();
+                if (name.length === 0) {
+                    userNameInput.style.borderColor = '#ff5e7e';
+                    userNameInput.style.boxShadow = '0 0 0 4px rgba(255, 94, 126, 0.25)';
+                    userNameInput.placeholder = 'Veuillez entrer un nom...';
+                    userNameInput.focus();
+                    setTimeout(() => {
+                        userNameInput.style.borderColor = '';
+                        userNameInput.style.boxShadow = '';
+                    }, 1500);
+                    return;
+                }
+                saveUserName(name);
+                showUserBanner(name);
+                hideWelcome();
+                initAudio();
+            }
+
+            startBtn.addEventListener('click', handleStart);
+            userNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleStart();
+            });
+
+            const existingName = loadUserName();
+            if (existingName) {
+                userNameInput.value = existingName;
+                showUserBanner(existingName);
+                hideWelcome();
+            } else {
+                setTimeout(() => userNameInput.focus(), 500);
+            }
+
+            // ==================== AUDIO & SONS ====================
+            let audioCtx = null;
+            let soundEnabled = true;
+            let lastSecond = -1;
+            let lastHourPlayed = -1;
+
+            // Son tic-tac sélectionné (par défaut: classic)
+            let currentTickSound = 'classic';
+            // Son d'heure sélectionné (par défaut: chime)
+            let currentHourSound = 'chime';
+
+            function initAudio() {
+                if (!audioCtx) {
+                    try {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    } catch (e) {
+                        console.warn('AudioContext non supporté');
+                    }
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+
+            // ---------- Bibliothèque de sons de tic-tac ----------
+            function playTickSound(type) {
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
+
+                switch (type) {
+                    case 'classic': {
+                        // Tic classique - square wave descendante
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(1400, now);
+                        osc.frequency.exponentialRampToValueAtTime(800, now + 0.02);
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.exponentialRampToValueAtTime(0.15, now + 0.005);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.06);
+                        break;
+                    }
+                    case 'woodblock': {
+                        // Woodblock - bruit filtré court avec enveloppe percussive
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        const filter = audioCtx.createBiquadFilter();
+                        filter.type = 'bandpass';
+                        filter.frequency.value = 1800;
+                        filter.Q.value = 8;
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(900, now);
+                        osc.frequency.exponentialRampToValueAtTime(400, now + 0.03);
+                        gain.gain.setValueAtTime(0.3, now);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+                        osc.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.09);
+                        break;
+                    }
+                    case 'digital': {
+                        // Digital - bip carré court
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.value = 2200;
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.exponentialRampToValueAtTime(0.12, now + 0.002);
+                        gain.gain.setValueAtTime(0.12, now + 0.03);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.05);
+                        break;
+                    }
+                    case 'bell': {
+                        // Cloche douce - sine avec harmonique
+                        const osc1 = audioCtx.createOscillator();
+                        const osc2 = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc1.type = 'sine';
+                        osc1.frequency.value = 1200;
+                        osc2.type = 'sine';
+                        osc2.frequency.value = 2400;
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.005);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+                        osc1.connect(gain);
+                        osc2.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc1.start(now);
+                        osc2.start(now);
+                        osc1.stop(now + 0.32);
+                        osc2.stop(now + 0.32);
+                        break;
+                    }
+                    case 'tick': {
+                        // Tic pur - très court
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = 3000;
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.exponentialRampToValueAtTime(0.15, now + 0.002);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now);
+                        osc.stop(now + 0.03);
+                        break;
+                    }
+                }
+            }
+
+            // ---------- Bibliothèque de sons d'heure ----------
+            function playHourSound(type) {
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
+
+                switch (type) {
+                    case 'chime': {
+                        // Carillon - 3 notes harmonieuses
+                        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+                        notes.forEach((freq, i) => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.value = freq;
+                            const start = now + i * 0.15;
+                            gain.gain.setValueAtTime(0.0001, start);
+                            gain.gain.exponentialRampToValueAtTime(0.2, start + 0.01);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.2);
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.start(start);
+                            osc.stop(start + 1.3);
+                        });
+                        break;
+                    }
+                    case 'bell-hour': {
+                        // Cloche - 2 harmoniques
+                        const osc1 = audioCtx.createOscillator();
+                        const osc2 = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc1.type = 'sine';
+                        osc1.frequency.value = 880;
+                        osc2.type = 'sine';
+                        osc2.frequency.value = 1760;
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+                        osc1.connect(gain);
+                        osc2.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc1.start(now);
+                        osc2.start(now);
+                        osc1.stop(now + 1.6);
+                        osc2.stop(now + 1.6);
+                        break;
+                    }
+                    case 'gong': {
+                        // Gong - basses fréquences avec battement
+                        const freqs = [110, 165, 220, 275];
+                        freqs.forEach((f, i) => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.value = f;
+                            gain.gain.setValueAtTime(0.0001, now);
+                            gain.gain.exponentialRampToValueAtTime(0.15 / (i + 1), now + 0.02);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, now + 2);
+                                                        osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.start(now);
+                            osc.stop(now + 2.1);
+                        });
+                        break;
+                    }
+                    case 'marimba': {
+                        // Marimba - notes courtes et chaudes
+                        const notes = [392, 523.25, 659.25]; // G4, C5, E5
+                        notes.forEach((freq, i) => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.value = freq;
+                            const start = now + i * 0.12;
+                            gain.gain.setValueAtTime(0.0001, start);
+                            gain.gain.exponentialRampToValueAtTime(0.3, start + 0.01);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.5);
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.start(start);
+                            osc.stop(start + 0.55);
+                        });
+                        break;
+                    }
+                    case 'beep': {
+                        // Bip électronique - 2 bips
+                        [0, 0.18].forEach(offset => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'square';
+                            osc.frequency.value = 1000;
+                            const start = now + offset;
+                            gain.gain.setValueAtTime(0.0001, start);
+                            gain.gain.exponentialRampToValueAtTime(0.15, start + 0.005);
+                            gain.gain.setValueAtTime(0.15, start + 0.1);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.start(start);
+                            osc.stop(start + 0.13);
+                        });
+                        break;
+                    }
+                }
+            }
+
+            function playTick() {
+                if (!soundEnabled) return;
+                initAudio();
+                if (!audioCtx) return;
+                playTickSound(currentTickSound);
+            }
+
+            function playHourChime() {
+                if (!soundEnabled) return;
+                initAudio();
+                if (!audioCtx) return;
+                playHourSound(currentHourSound);
+            }
+
+            document.addEventListener('click', initAudio, { once: true });
+            document.addEventListener('touchstart', initAudio, { once: true });
+
+            // ==================== HORLOGE ====================
+            function updateClock() {
+                const now = new Date();
+                const hours = now.getHours();
+                const minutes = now.getMinutes();
+                const seconds = now.getSeconds();
+                const millis = now.getMilliseconds();
+
+                const hourAngle = (hours % 12) * 30 + minutes * 0.5 + seconds * (0.5 / 60) + millis * (0.5 / 60000);
+                const minuteAngle = minutes * 6 + seconds * 0.1 + millis * (0.1 / 1000);
+                const secondAngle = seconds * 6 + millis * (6 / 1000);
+
+                document.querySelectorAll('.hour-hand').forEach(h => {
+                    h.style.transform = `rotate(${hourAngle}deg)`;
+                });
+                document.querySelectorAll('.minute-hand').forEach(m => {
+                    m.style.transform = `rotate(${minuteAngle}deg)`;
+                });
+                document.querySelectorAll('.second-hand').forEach(s => {
+                    s.style.transform = `rotate(${secondAngle}deg)`;
+                });
+
+                // Son tic-tac chaque seconde
+                if (seconds !== lastSecond) {
+                    lastSecond = seconds;
+                    playTick();
+
+                    // Son d'heure : à chaque changement d'heure (minute 0, seconde 0)
+                    if (minutes === 0 && seconds === 0 && hours !== lastHourPlayed) {
+                        lastHourPlayed = hours;
+                        // Petit délai pour ne pas superposer avec le tic
+                        setTimeout(() => playHourChime(), 100);
+                    }
+                }
+
+                const hh = String(hours).padStart(2, '0');
+                const mm = String(minutes).padStart(2, '0');
+                const ss = String(seconds).padStart(2, '0');
+                const timeHTML = `${hh}:${mm}<span class="seconds">${ss}</span>`;
+
+                digitalTime.innerHTML = timeHTML;
+                const zoomTime = focusContent.querySelector('.focus-time-display');
+                if (zoomTime) {
+                    zoomTime.innerHTML = timeHTML;
+                }
+
+                const dayName = jours[now.getDay()];
+                const dayNum = now.getDate();
+                const monthName = mois[now.getMonth()];
+                const year = now.getFullYear();
+                const dateStr = `${dayName} ${dayNum} ${monthName} ${year}`;
+                digitalDate.textContent = dateStr;
+
+                const zoomDate = focusContent.querySelector('.focus-date-display');
+                if (zoomDate) {
+                    zoomDate.textContent = dateStr;
+                }
+            }
+
+            function animate() {
+                updateClock();
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+
+            // ==================== CALENDRIER ====================
+            let calCurrentDate = new Date();
+
+            function renderCalendar() {
+                const year = calCurrentDate.getFullYear();
+                const month = calCurrentDate.getMonth();
+
+                document.getElementById('calendarTitle').textContent = `${mois[month]} ${year}`;
+
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysInPrevMonth = new Date(year, month, 0).getDate();
+                const today = new Date();
+
+                const grid = document.getElementById('calendarGrid');
+                grid.innerHTML = '';
+
+                joursCourt.forEach(j => {
+                    const el = document.createElement('div');
+                    el.className = 'day-name';
+                    el.textContent = j;
+                    grid.appendChild(el);
+                });
+
+                const startOffset = firstDay;
+
+                for (let i = startOffset - 1; i >= 0; i--) {
+                    const el = document.createElement('div');
+                    el.className = 'day other-month';
+                    el.textContent = daysInPrevMonth - i;
+                    grid.appendChild(el);
+                }
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const el = document.createElement('div');
+                    el.className = 'day';
+                    if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                        el.classList.add('today');
+                    }
+                    el.textContent = d;
+                    grid.appendChild(el);
+                }
+
+                const totalCells = startOffset + daysInMonth;
+                const remaining = (7 - (totalCells % 7)) % 7;
+                for (let i = 1; i <= remaining; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'day other-month';
+                    el.textContent = i;
+                    grid.appendChild(el);
+                }
+            }
+
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                calCurrentDate.setMonth(calCurrentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                calCurrentDate.setMonth(calCurrentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            renderCalendar();
+            setInterval(renderCalendar, 60000);
+
+
+            // ==================== PANNEAUX ====================
+            calendarBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                calendarPanel.classList.toggle('active');
+                settingsPanel.classList.remove('active');
+            });
+
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                settingsPanel.classList.toggle('active');
+                calendarPanel.classList.remove('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!calendarPanel.contains(e.target) && e.target !== calendarBtn) {
+                    calendarPanel.classList.remove('active');
+                }
+                if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+                    settingsPanel.classList.remove('active');
+                }
+            });
+
+            calendarPanel.addEventListener('click', e => e.stopPropagation());
+            settingsPanel.addEventListener('click', e => e.stopPropagation());
+
+            // ==================== SÉLECTION DES SONS ====================
+            // Sélecteur de son de tic-tac
+            const tickSelector = document.getElementById('tickSoundSelector');
+            tickSelector.querySelectorAll('.sound-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('test-btn')) return;
+                    const soundType = option.dataset.sound;
+                    currentTickSound = soundType;
+                    tickSelector.querySelectorAll('.sound-option').forEach(o => o.classList.remove('active'));
+                    option.classList.add('active');
+                    try { localStorage.setItem('clock_tick_sound', soundType); } catch (err) {}
+                    // Tester immédiatement
+                    initAudio();
+                    if (audioCtx) playTickSound(soundType);
+                });
+            });
+
+            // Sélecteur de son d'heure
+            const hourSelector = document.getElementById('hourSoundSelector');
+            hourSelector.querySelectorAll('.sound-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('test-btn')) return;
+                    const soundType = option.dataset.sound;
+                    currentHourSound = soundType;
+                    hourSelector.querySelectorAll('.sound-option').forEach(o => o.classList.remove('active'));
+                    option.classList.add('active');
+                    try { localStorage.setItem('clock_hour_sound', soundType); } catch (err) {}
+                    // Tester immédiatement
+                    initAudio();
+                    if (audioCtx) playHourSound(soundType);
+                });
+            });
+
+            // Boutons de test
+            document.querySelectorAll('.test-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const type = btn.dataset.test;
+                    initAudio();
+                    if (!audioCtx) return;
+                    // Déterminer si c'est un son de tic ou d'heure selon le parent
+                    const parentSelector = btn.closest('#tickSoundSelector');
+                    if (parentSelector) {
+                        playTickSound(type);
+                    } else {
+                        playHourSound(type);
+                    }
+                });
+            });
+
+            // Restaurer les sons sauvegardés
+            try {
+                const savedTick = localStorage.getItem('clock_tick_sound');
+                if (savedTick) {
+                    currentTickSound = savedTick;
+                    tickSelector.querySelectorAll('.sound-option').forEach(o => {
+                        o.classList.toggle('active', o.dataset.sound === savedTick);
+                    });
+                }
+                const savedHour = localStorage.getItem('clock_hour_sound');
+                if (savedHour) {
+                    currentHourSound = savedHour;
+                    hourSelector.querySelectorAll('.sound-option').forEach(o => {
+                        o.classList.toggle('active', o.dataset.sound === savedHour);
+                    });
+                }
+            } catch (e) {}
+
+            // ==================== MODE PLEIN ÉCRAN ====================
+            let currentFocus = null;
+
+            function openFocus(type) {
+                focusContent.innerHTML = '';
+
+                if (type === 'analog') {
+                    const bigClock = document.createElement('div');
+                    bigClock.className = 'analog-clock';
+                    const bigFace = document.createElement('div');
+                    bigFace.className = 'clock-face';
+                    generateMarkers(bigFace);
+                    bigClock.appendChild(bigFace);
+                    focusContent.appendChild(bigClock);
+                } else if (type === 'digital') {
+                    const bigDigital = document.createElement('div');
+                    bigDigital.className = 'digital-clock';
+                    const bigTime = document.createElement('div');
+                    bigTime.className = 'time focus-time-display';
+                    bigTime.innerHTML = '00:00<span class="seconds">00</span>';
+                    const bigDate = document.createElement('div');
+                    bigDate.className = 'date focus-date-display';
+                    bigDate.textContent = '---';
+                    bigDigital.appendChild(bigTime);
+                    bigDigital.appendChild(bigDate);
+                    focusContent.appendChild(bigDigital);
+                }
+
+                focusOverlay.classList.add('active');
+                currentFocus = type;
+                updateClock();
+            }
+
+            function closeFocus() {
+                focusOverlay.classList.remove('active');
+                currentFocus = null;
+                setTimeout(() => {
+                    if (!focusOverlay.classList.contains('active')) {
+                        focusContent.innerHTML = '';
+                    }
+                }, 500);
+            }
+
+            analogClock.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openFocus('analog');
+            });
+
+            digitalClock.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openFocus('digital');
+            });
+
+            focusOverlay.addEventListener('click', closeFocus);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && currentFocus) {
+                    closeFocus();
+                }
+            });
+
+            // ==================== MODE SOMBRE / CLAIR ====================
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            darkModeToggle.checked = true;
+
+            darkModeToggle.addEventListener('change', () => {
+                if (darkModeToggle.checked) {
+                    document.body.classList.remove('light-mode');
+                } else {
+                    document.body.classList.add('light-mode');
+                }
+            });
+
+            // ==================== SON TOGGLE ====================
+            const soundToggle = document.getElementById('soundToggle');
+            soundToggle.checked = true;
+
+            soundToggle.addEventListener('change', () => {
+                soundEnabled = soundToggle.checked;
+                if (soundEnabled) initAudio();
+            });
+
+            // ==================== TAILLES ====================
+            const scaleX = document.getElementById('scaleX');
+            const scaleY = document.getElementById('scaleY');
+            const scaleXValue = document.getElementById('scaleXValue');
+            const scaleYValue = document.getElementById('scaleYValue');
+
+            function applyScale() {
+                const sx = scaleX.value / 100;
+                const sy = scaleY.value / 100;
+                mainContainer.style.transform = `scale(${sx}, ${sy})`;
+                scaleXValue.textContent = scaleX.value + '%';
+                scaleYValue.textContent = scaleY.value + '%';
+            }
+
+            scaleX.addEventListener('input', applyScale);
+            scaleY.addEventListener('input', applyScale);
+
+            // ==================== COULEURS ====================
+            const colorHour = document.getElementById('colorHour');
+            const colorMinute = document.getElementById('colorMinute');
+            const colorSecond = document.getElementById('colorSecond');
+            const colorDigital = document.getElementById('colorDigital');
+            const colorDate = document.getElementById('colorDate');
+            const colorCalendar = document.getElementById('colorCalendar');
+
+            function hexToRgb(hex) {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                return { r, g, b };
+            }
+
+            function lighten(hex, amount) {
+                const { r, g, b } = hexToRgb(hex);
+                const nr = Math.max(0, Math.min(255, r + amount));
+                const ng = Math.max(0, Math.min(255, g + amount));
+                const nb = Math.max(0, Math.min(255, b + amount));
+                return `rgb(${nr}, ${ng}, ${nb})`;
+            }
+
+            function applyColors() {
+                const root = document.documentElement;
+
+                const hColor = colorHour.value;
+                root.style.setProperty('--hour-color-start', hColor);
+                root.style.setProperty('--hour-color-end', lighten(hColor, 60));
+                root.style.setProperty('--hour-glow', hColor);
+
+                const mColor = colorMinute.value;
+                root.style.setProperty('--minute-color-start', mColor);
+                root.style.setProperty('--minute-color-end', lighten(mColor, 60));
+                root.style.setProperty('--minute-glow', mColor);
+
+                const sColor = colorSecond.value;
+                root.style.setProperty('--second-color', sColor);
+                root.style.setProperty('--second-glow', sColor);
+
+                const dColor = colorDigital.value;
+                root.style.setProperty('--time-gradient', `linear-gradient(135deg, ${lighten(dColor, 60)}, ${dColor}, ${lighten(dColor, -30)})`);
+
+                root.style.setProperty('--date-color', colorDate.value);
+                root.style.setProperty('--major-marker-color', colorCalendar.value);
+            }
+
+            colorHour.addEventListener('input', applyColors);
+            colorMinute.addEventListener('input', applyColors);
+            colorSecond.addEventListener('input', applyColors);
+            colorDigital.addEventListener('input', applyColors);
+            colorDate.addEventListener('input', applyColors);
+            colorCalendar.addEventListener('input', applyColors);
+
+            // ==================== RÉINITIALISATION ====================
+            document.getElementById('resetSettings').addEventListener('click', () => {
+                darkModeToggle.checked = true;
+                document.body.classList.remove('light-mode');
+
+                soundToggle.checked = true;
+                soundEnabled = true;
+
+                // Réinitialiser les sons
+                currentTickSound = 'classic';
+                currentHourSound = 'chime';
+                tickSelector.querySelectorAll('.sound-option').forEach(o => {
+                    o.classList.toggle('active', o.dataset.sound === 'classic');
+                });
+                hourSelector.querySelectorAll('.sound-option').forEach(o => {
+                    o.classList.toggle('active', o.dataset.sound === 'chime');
+                });
+                try {
+                    localStorage.removeItem('clock_tick_sound');
+                    localStorage.removeItem('clock_hour_sound');
+                } catch (e) {}
+
+                scaleX.value = 100;
+                scaleY.value = 100;
+                applyScale();
+
+                colorHour.value = '#ffd966';
+                colorMinute.value = '#aad6ff';
+                colorSecond.value = '#ff5e7e';
+                colorDigital.value = '#ffe07a';
+                colorDate.value = '#b8c7ff';
+                colorCalendar.value = '#ffd966';
+
+                const root = document.documentElement;
+                root.style.removeProperty('--hour-color-start');
+                root.style.removeProperty('--hour-color-end');
+                root.style.removeProperty('--hour-glow');
+                root.style.removeProperty('--minute-color-start');
+                root.style.removeProperty('--minute-color-end');
+                root.style.removeProperty('--minute-glow');
+                root.style.removeProperty('--second-color');
+                root.style.removeProperty('--second-glow');
+                root.style.removeProperty('--time-gradient');
+                root.style.removeProperty('--date-color');
+                root.style.removeProperty('--major-marker-color');
+            });
+
+            applyColors();
+        })();
+    </script>
+</body>
+</html>
